@@ -1,3 +1,6 @@
+### 12.02
+ - 
+
 ### 12.01
  - Added official website links
  - Improved Evil Twin stability by forcing NetworkManager killing before fake AP launches when enabled
