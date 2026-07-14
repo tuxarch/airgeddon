@@ -7890,6 +7890,7 @@ function enterprise_attacks_menu() {
 
 	debug_print
 
+	restore_terminal_output
 	clear
 	language_strings "${language}" 84 "title"
 	current_menu="enterprise_attacks_menu"
@@ -8048,6 +8049,7 @@ function evil_twin_attacks_menu() {
 
 	debug_print
 
+	restore_terminal_output
 	clear
 	language_strings "${language}" 253 "title"
 	current_menu="evil_twin_attacks_menu"
@@ -14186,6 +14188,15 @@ function write_et_processes() {
 			echo "${item}" >> "${tmpdir}${et_processesfile}"
 		done
 	fi
+}
+
+#Restore terminal output state before drawing menus
+function restore_terminal_output() {
+
+	debug_print
+
+	stty sane > /dev/null 2>&1
+	printf '\r'
 }
 
 #Kill a given PID and all its subprocesses recursively
