@@ -1,5 +1,5 @@
 ### 12.02
- - 
+ - Added 5GHz band hopping support to DoS pursuit mode
 
 ### 12.01
  - Added official website links

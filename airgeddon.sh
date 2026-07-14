@@ -3607,6 +3607,27 @@ function set_wps_target_band_id_from_channel() {
 	fi
 }
 
+#Set DoS pursuit mode target band id based on a 2.4/5Ghz channel
+function set_dos_pursuit_mode_target_band_id() {
+
+	debug_print
+
+	local dos_pm_channel="${1}"
+	dos_pm_current_target_band_id=""
+
+	if [[ -z "${dos_pm_channel}" ]] || [[ ! "${dos_pm_channel}" =~ ^[0-9]+$ ]]; then
+		return 1
+	fi
+
+	if [ "${dos_pm_channel}" -le 14 ]; then
+		dos_pm_current_target_band_id="${band_24ghz}"
+	else
+		dos_pm_current_target_band_id="${band_5ghz}"
+	fi
+
+	return 0
+}
+
 #Read the user input on asleap challenge
 function read_challenge() {
 
@@ -5581,20 +5602,28 @@ function launch_dos_pursuit_mode_attack() {
 				echo
 				kill_dos_pursuit_mode_processes
 				return 1
-			else
-				airodump_band_modifier="a"
 			fi
 		else
 			if ! check_target_band_supported_by_interface "secondary_wifi_interface"; then
 				echo
 				kill_dos_pursuit_mode_processes
 				return 1
-			else
-				airodump_band_modifier="a"
 			fi
 		fi
+	fi
+
+	if [ "${interface_pursuit_mode_scan}" = "${interface}" ]; then
+		if [ "${interfaces_band_info['main_wifi_interface','5Ghz_allowed']}" -eq 0 ]; then
+			airodump_band_modifier="bg"
+		else
+			airodump_band_modifier="abg"
+		fi
 	else
-		airodump_band_modifier="bg"
+		if [ "${interfaces_band_info['secondary_wifi_interface','5Ghz_allowed']}" -eq 0 ]; then
+			airodump_band_modifier="bg"
+		else
+			airodump_band_modifier="abg"
+		fi
 	fi
 
 	sleep "${dos_delay}"
@@ -5617,6 +5646,7 @@ pid_control_pursuit_mode() {
 	local dos_pursuit_mode_ignored_channel=""
 	local dos_pursuit_mode_relaunched
 	local dos_pm_bssid
+	local dos_pm_current_target_band_id
 
 	rm -rf "${tmpdir}${channelfile}" > /dev/null 2>&1
 	echo "${channel}" > "${tmpdir}${channelfile}"
@@ -5637,7 +5667,11 @@ pid_control_pursuit_mode() {
 					dos_pm_current_channel=$(echo "${item}" | awk -F "," '{print $4}' | sed 's/^[[:blank:]]*//;s/[[:blank:]]*$//')
 
 					if [[ "${dos_pm_current_channel}" =~ ^([0-9]+)$ ]] && [[ "${BASH_REMATCH[1]}" -ne 0 ]] && [[ "${BASH_REMATCH[1]}" -ne "${channel}" ]]; then
-						if [[ "${dos_pm_current_channel}" -gt 14 ]] && [[ "${interfaces_band_info['main_wifi_interface','5Ghz_allowed']}" -eq 0 ]]; then
+						if ! set_dos_pursuit_mode_target_band_id "${dos_pm_current_channel}"; then
+							continue
+						fi
+
+						if [[ "${dos_pm_current_target_band_id}" = "${band_5ghz}" ]] && { [[ "${interfaces_band_info['main_wifi_interface','5Ghz_allowed']}" -eq 0 ]] || [[ "${interfaces_band_info['secondary_wifi_interface','5Ghz_allowed']}" -eq 0 ]]; }; then
 							if [ "${dos_pursuit_mode_ignored_channel}" != "${dos_pm_current_channel}" ]; then
 								echo
 								language_strings "${language}" 813 "yellow"
@@ -5648,14 +5682,13 @@ pid_control_pursuit_mode() {
 
 						dos_pursuit_mode_ignored_channel=""
 						channel="${dos_pm_current_channel}"
+						target_band_id="${dos_pm_current_target_band_id}"
 						rm -rf "${tmpdir}${channelfile}" > /dev/null 2>&1
 						echo "${channel}" > "${tmpdir}${channelfile}"
+						rm -rf "${tmpdir}${bandfile}" > /dev/null 2>&1
+						echo "${target_band_id}" > "${tmpdir}${bandfile}"
 
-						if [ -n "${enterprise_mode}" ]; then
-							sed -ri "s:(channel)=([0-9]{1,3}):\1=${channel}:" "${tmpdir}${hostapd_wpe_file}" 2> /dev/null
-						elif [ -n "${et_mode}" ]; then
-							sed -ri "s:(channel)=([0-9]{1,3}):\1=${channel}:" "${tmpdir}${hostapd_file}" 2> /dev/null
-						fi
+						update_dos_pursuit_mode_hostapd_config
 
 						kill_dos_pursuit_mode_processes
 						launch_dos_pursuit_mode_attack "${1}" "relaunch"
@@ -14228,6 +14261,32 @@ function kill_dos_pursuit_mode_processes() {
 	fi
 	dos_pursuit_mode_pids=()
 	sleep 1
+}
+
+#Update DoS pursuit mode hostapd channel and band settings
+function update_dos_pursuit_mode_hostapd_config() {
+
+	debug_print
+
+	local dos_pm_hostapd_file
+	local dos_pm_hw_mode
+
+	if [ -n "${enterprise_mode}" ]; then
+		dos_pm_hostapd_file="${tmpdir}${hostapd_wpe_file}"
+	elif [ -n "${et_mode}" ]; then
+		dos_pm_hostapd_file="${tmpdir}${hostapd_file}"
+	else
+		return 0
+	fi
+
+	if [ "${channel}" -gt 14 ]; then
+		dos_pm_hw_mode="a"
+	else
+		dos_pm_hw_mode="g"
+	fi
+
+	sed -ri "s:(channel)=([0-9]{1,3}):\1=${channel}:" "${dos_pm_hostapd_file}" 2> /dev/null
+	sed -ri "s:(hw_mode)=([ag]):\1=${dos_pm_hw_mode}:" "${dos_pm_hostapd_file}" 2> /dev/null
 }
 
 #Set current channel reading it from file
