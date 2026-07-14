@@ -5454,6 +5454,7 @@ function launch_dos_pursuit_mode_attack() {
 		else
 			echo
 			language_strings "${language}" 507 "yellow"
+			launch_fake_ap
 		fi
 	fi
 
@@ -5581,7 +5582,7 @@ function launch_dos_pursuit_mode_attack() {
 				kill_dos_pursuit_mode_processes
 				return 1
 			else
-				airodump_band_modifier="abg"
+				airodump_band_modifier="a"
 			fi
 		else
 			if ! check_target_band_supported_by_interface "secondary_wifi_interface"; then
@@ -5589,35 +5590,17 @@ function launch_dos_pursuit_mode_attack() {
 				kill_dos_pursuit_mode_processes
 				return 1
 			else
-				airodump_band_modifier="abg"
+				airodump_band_modifier="a"
 			fi
 		fi
 	else
-		if [ "${interface_pursuit_mode_scan}" = "${interface}" ]; then
-			if [ "${interfaces_band_info['main_wifi_interface','5Ghz_allowed']}" -eq 0 ]; then
-				airodump_band_modifier="bg"
-			else
-				airodump_band_modifier="abg"
-			fi
-		else
-			if [ "${interfaces_band_info['secondary_wifi_interface','5Ghz_allowed']}" -eq 0 ]; then
-				airodump_band_modifier="bg"
-			else
-				airodump_band_modifier="abg"
-			fi
-		fi
+		airodump_band_modifier="bg"
 	fi
 
 	sleep "${dos_delay}"
 	airodump-ng -w "${tmpdir}dos_pm" "${interface_pursuit_mode_scan}" --band "${airodump_band_modifier}" > /dev/null 2>&1 &
 	dos_pursuit_mode_scan_pid=$!
 	dos_pursuit_mode_pids+=("${dos_pursuit_mode_scan_pid}")
-
-	if [[ -n "${2}" ]] && [[ "${2}" = "relaunch" ]]; then
-		if [[ -n "${enterprise_mode}" ]] || [[ -n "${et_mode}" ]]; then
-			launch_fake_ap
-		fi
-	fi
 
 	local processes_file
 	processes_file="${tmpdir}${et_processesfile}"
@@ -5632,18 +5615,26 @@ pid_control_pursuit_mode() {
 	debug_print
 
 	local dos_pursuit_mode_ignored_channel=""
+	local dos_pursuit_mode_relaunched
+	local dos_pm_bssid
 
 	rm -rf "${tmpdir}${channelfile}" > /dev/null 2>&1
 	echo "${channel}" > "${tmpdir}${channelfile}"
 
 	while true; do
-		sleep 5
+		sleep 2
 		if grep "${bssid}" "${tmpdir}dos_pm-01.csv" > /dev/null 2>&1; then
 			readarray -t DOS_PM_LINES_TO_PARSE < <(cat < "${tmpdir}dos_pm-01.csv" 2> /dev/null)
+			dos_pursuit_mode_relaunched=0
 
 			for item in "${DOS_PM_LINES_TO_PARSE[@]}"; do
-				if [[ "${item}" =~ ${bssid} ]]; then
-					dos_pm_current_channel=$(echo "${item}" | awk -F "," '{print $4}' | sed 's/^[ ^t]*//')
+				if [[ "${item}" =~ ^Station[[:blank:]]MAC ]]; then
+					break
+				fi
+
+				dos_pm_bssid=$(echo "${item}" | awk -F "," '{print $1}' | sed 's/^[[:blank:]]*//;s/[[:blank:]]*$//')
+				if [ "${dos_pm_bssid}" = "${bssid}" ]; then
+					dos_pm_current_channel=$(echo "${item}" | awk -F "," '{print $4}' | sed 's/^[[:blank:]]*//;s/[[:blank:]]*$//')
 
 					if [[ "${dos_pm_current_channel}" =~ ^([0-9]+)$ ]] && [[ "${BASH_REMATCH[1]}" -ne 0 ]] && [[ "${BASH_REMATCH[1]}" -ne "${channel}" ]]; then
 						if [[ "${dos_pm_current_channel}" -gt 14 ]] && [[ "${interfaces_band_info['main_wifi_interface','5Ghz_allowed']}" -eq 0 ]]; then
@@ -5668,9 +5659,15 @@ pid_control_pursuit_mode() {
 
 						kill_dos_pursuit_mode_processes
 						launch_dos_pursuit_mode_attack "${1}" "relaunch"
+						dos_pursuit_mode_relaunched=1
+						break
 					fi
 				fi
 			done
+
+			if [ "${dos_pursuit_mode_relaunched}" -eq 1 ]; then
+				continue
+			fi
 		fi
 
 		dos_attack_alive=$(ps uax | awk '{print $2}' | grep -E "^${dos_pursuit_mode_attack_pid}$" 2> /dev/null)
