@@ -14300,15 +14300,21 @@ function update_dos_pursuit_mode_hostapd_config() {
 	sed -ri "s:(hw_mode)=([ag]):\1=${dos_pm_hw_mode}:" "${dos_pm_hostapd_file}" 2> /dev/null
 }
 
-#Set current channel reading it from file
+#Set current channel and band reading them from files
 function recover_current_channel() {
 
 	debug_print
 
 	local recovered_channel
+	local recovered_band
 	recovered_channel=$(cat "${tmpdir}${channelfile}" 2> /dev/null)
 	if [ -n "${recovered_channel}" ]; then
 		channel="${recovered_channel}"
+	fi
+
+	recovered_band=$(cat "${tmpdir}${bandfile}" 2> /dev/null)
+	if [ -n "${recovered_band}" ]; then
+		target_band_id="${recovered_band}"
 	fi
 }
 
