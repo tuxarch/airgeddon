@@ -8199,7 +8199,7 @@ function initialize_language_strings() {
 	arr["ARABIC",506]="أو إغلاق نافذة الهجوم [Ctrl+C] في هذه النافذة. لإيقافه يجب الضغط على [Enter] عندما تضغط على \"DoS pursuit mode\" مع تفعيل وضع DoS سيبدأ هجوم"
 	arr["CHINESE",506]="当您在此窗口中按下 [Enter] 时，启用“信道追踪模式”的 DoS 攻击将开始。要停止它，您必须按 [Ctrl+C] 或关闭攻击窗口"
 
-	arr["ENGLISH",507]="Channel change detected. Reconfiguring attack (AP and DoS) as part of \"DoS pursuit mode\". Now on channel \${normal_color}\${channel}\${yellow_color} (band \${normal_color}\${target_band_id}\${yellow_color})"
+	arr["ENGLISH",507]="Channel change detected. Reconfiguring attack (AP and DoS) as part of \"DoS pursuit mode\". Now on channel \${normal_color}\${channel}\${yellow_color} (\${normal_color}\${target_band_id}\${yellow_color} band)"
 	arr["SPANISH",507]="Cambio de canal detectado. Reconfigurando ataque (AP y DoS) como parte del \"modo persecución DoS\". Ahora en el canal \${normal_color}\${channel}\${yellow_color} (banda \${normal_color}\${target_band_id}\${yellow_color})"
 	arr["FRENCH",507]="\${pending_of_translation} Changement de canal détecté. Reconfiguration de l'attaque (AP et DoS) dans le cadre du \"mode poursuite DoS\". Maintenant sur le canal \${normal_color}\${channel}\${yellow_color} (bande \${normal_color}\${target_band_id}\${yellow_color})"
 	arr["CATALAN",507]="\${pending_of_translation} Canvi de canal detectat. Reconfigurant l'atac (AP i DoS) com a part del \"mode persecució DoS\". Ara al canal \${normal_color}\${channel}\${yellow_color} (banda \${normal_color}\${target_band_id}\${yellow_color})"
