@@ -584,7 +584,7 @@ function initialize_language_strings() {
 	et_misc_texts["ITALIAN",30]="Banda"
 	et_misc_texts["POLISH",30]="Pasmo"
 	et_misc_texts["GERMAN",30]="Band"
-	et_misc_texts["TURKISH",30]="\${pending_of_translation} Bant"
+	et_misc_texts["TURKISH",30]="Bant"
 	et_misc_texts["ARABIC",30]="النطاق"
 	et_misc_texts["CHINESE",30]="\${pending_of_translation} 频段"
 
@@ -641,7 +641,7 @@ function initialize_language_strings() {
 	wps_texts["ITALIAN",3]="Banda"
 	wps_texts["POLISH",3]="Pasmo"
 	wps_texts["GERMAN",3]="Band"
-	wps_texts["TURKISH",3]="\${pending_of_translation} Bant"
+	wps_texts["TURKISH",3]="Bant"
 	wps_texts["ARABIC",3]="النطاق"
 	wps_texts["CHINESE",3]="\${pending_of_translation} 频段"
 
@@ -754,7 +754,7 @@ function initialize_language_strings() {
 	wep_texts["ITALIAN",7]="Banda"
 	wep_texts["POLISH",7]="Pasmo"
 	wep_texts["GERMAN",7]="Band"
-	wep_texts["TURKISH",7]="\${pending_of_translation} Bant"
+	wep_texts["TURKISH",7]="Bant"
 	wep_texts["ARABIC",7]="النطاق"
 	wep_texts["CHINESE",7]="\${pending_of_translation} 频段"
 
@@ -1081,7 +1081,7 @@ function initialize_language_strings() {
 	enterprise_texts["ITALIAN",12]="Banda"
 	enterprise_texts["POLISH",12]="Pasmo"
 	enterprise_texts["GERMAN",12]="Band"
-	enterprise_texts["TURKISH",12]="\${pending_of_translation} Bant"
+	enterprise_texts["TURKISH",12]="Bant"
 	enterprise_texts["ARABIC",12]="النطاق"
 	enterprise_texts["CHINESE",12]="\${pending_of_translation} 频段"
 
